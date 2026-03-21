@@ -117,20 +117,12 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_SARVAM_API_KEY;
-      if (!apiKey) throw new Error('NO_KEY');
-
-      console.log('Sending message with API key:', apiKey?.substring(0, 10) + '...');
-
-      const response = await fetch('/sarvam-api/v1/chat/completions', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-subscription-key': apiKey,
         },
         body: JSON.stringify({
-          model: 'sarvam-m',
-          max_tokens: 1200,
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             ...newMessages
@@ -155,7 +147,6 @@ export default function ChatBot() {
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
       
       const rawReply = data.choices?.[0]?.message?.content || '';
       console.log('Raw reply length:', rawReply.length);
