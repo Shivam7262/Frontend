@@ -117,7 +117,7 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_SARVAM_API_KEY;
+      const apiKey = import.meta.env.VITE_SARVAM_API_KEY || sk_zzcr2d5x_e2EXFXruXyDONtwucW7a8aJn;
       if (!apiKey) throw new Error('NO_KEY');
 
       console.log('Sending message with API key:', apiKey?.substring(0, 10) + '...');
