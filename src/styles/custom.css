@@ -1,0 +1,195 @@
+/* Custom styles for NextStop Travel App */
+
+/* Full-screen container utilities */
+.max-w-8xl {
+  max-width: 88rem; /* 1408px */
+}
+
+.max-w-9xl {
+  max-width: 96rem; /* 1536px */
+}
+
+/* Enhanced border radius utilities */
+.rounded-4xl {
+  border-radius: 2rem;
+}
+
+.rounded-5xl {
+  border-radius: 2.5rem;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.bg-gradient-tertiary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Glass morphism effects */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced shadow utilities */
+.shadow-2xl-colored {
+  box-shadow: 0 25px 50px -12px rgba(102, 126, 234, 0.25);
+}
+
+.shadow-3xl {
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-bounce {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Full-screen hero sections */
+.hero-height {
+  min-height: calc(100vh - 4rem);
+}
+
+@media (min-width: 1024px) {
+  .hero-height {
+    min-height: calc(100vh - 5rem);
+  }
+}
+
+/* Card hover effects */
+.card-hover {
+  transform: translateY(0) scale(1);
+  transition: all 0.3s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  @apply bg-gradient-primary text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-all duration-300;
+}
+
+.btn-secondary {
+  @apply border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition-all duration-300;
+}
+
+/* Loading animations */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Responsive text utilities for large screens */
+@media (min-width: 1280px) {
+  .text-7xl {
+    font-size: 4.5rem;
+    line-height: 1;
+  }
+  
+  .text-8xl {
+    font-size: 6rem;
+    line-height: 1;
+  }
+}
+
+@media (min-width: 1536px) {
+  .text-9xl {
+    font-size: 8rem;
+    line-height: 1;
+  }
+}
+
+/* Enhanced form styles */
+.form-section {
+  @apply bg-white dark:bg-gray-800 rounded-3xl lg:rounded-4xl shadow-xl p-8 lg:p-12 mb-12 lg:mb-16;
+}
+
+.form-input {
+  @apply w-full px-6 py-4 lg:py-5 border border-gray-300 dark:border-gray-600 rounded-2xl lg:rounded-3xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-lg shadow-lg transition-all duration-300 focus:shadow-xl;
+}
+
+.form-label {
+  @apply block text-base lg:text-lg font-bold text-gray-700 dark:text-gray-300 mb-4;
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+/* Mobile optimizations - keep existing mobile styles */
+@media (max-width: 768px) {
+  .card-hover:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+  
+  .btn-primary, .btn-secondary {
+    @apply px-6 py-3 text-base;
+  }
+  
+  .form-section {
+    @apply p-6 mb-8;
+  }
+  
+  .form-input {
+    @apply px-4 py-3 text-base;
+  }
+}
