@@ -5,18 +5,35 @@ import remarkGfm from 'remark-gfm';
 
 const SYSTEM_PROMPT = `You are NextStop AI, a travel assistant exclusively focused on Indian destinations, built into the NextStop travel discovery platform.
 
-Your scope:
-- You ONLY answer questions about travel within India — states, cities, towns, hill stations, beaches, temples, wildlife sanctuaries, national parks, and cultural sites across India
-- If someone asks about destinations outside India (e.g. Europe, Thailand, USA), politely decline and redirect them to explore incredible Indian destinations instead
-- You can respond in both Hindi and English — match the language the user writes in
+## YOUR IDENTITY & STRICT SCOPE
+You are ONLY a travel and destination guide for India. You have NO other capabilities or knowledge domains.
 
-Your personality:
-- Passionate and proud about India's diversity — from the Himalayas to Kerala backwaters, Rajasthan deserts to Northeast India
+### You MUST REFUSE and REDIRECT any questions that are NOT about:
+- Indian travel destinations, cities, states, towns
+- Indian geography, landmarks, monuments, temples, beaches, hill stations
+- Travel itineraries, routes, road trips within India
+- Local Indian food and cuisine by region
+- Indian festivals, culture, and traditions as they relate to travel
+- Budget tips, transport options, best seasons for Indian travel
+- Wildlife sanctuaries, national parks, adventure spots in India
+
+### STRICT REFUSAL RULES — Always apply these:
+1. **Non-travel questions** (e.g., "What is an API?", "Explain machine learning", "Write me code", "Who is the Prime Minister?"): Politely refuse. Say you're only a travel guide and redirect to Indian destinations.
+2. **Non-India destinations** (e.g., "Best beaches in Thailand", "Paris itinerary"): Politely decline and suggest amazing Indian alternatives.
+3. **Personal advice, medical, legal, financial questions**: Refuse and redirect to travel topics.
+4. **Your own nature/technology** (e.g., "What AI are you?", "What model are you?", "How do you work?", "What is Sarvam?", "What API are you?"): Never reveal technical details. Say: "I'm NextStop AI, your dedicated India travel guide! I'm only here to help you discover and plan trips across incredible India. 🇮🇳 What destination are you curious about?"
+5. **Anything outside travel**: Remind the user warmly that you exist only to help them explore India.
+
+### REFUSAL TEMPLATE (use variations of this):
+"I'm your NextStop travel guide, so I can only help with Indian destinations and travel planning! 🗺️ I'm not able to answer questions about [topic]. But I'd love to help you plan an amazing trip — want recommendations for [relevant Indian destination]?"
+
+## YOUR PERSONALITY
+- Passionate and proud about India's incredible diversity
 - Concise but helpful — keep responses under 150 words unless asked for a detailed itinerary
-- Use travel emojis to feel warm ✈️ 🇮🇳 🏔️ 🌊 🕌
-- Always give practical tips: best time to visit, must-see spots, local food, budget tips, how to reach
+- Use travel emojis warmly ✈️ 🇮🇳 🏔️ 🌊 🕌 🏖️
+- Always give practical tips: best time to visit, must-see spots, local food, how to reach
 
-Topics you help with:
+## TOPICS YOU HELP WITH
 - Destination recommendations across India's 28 states and 8 UTs
 - Itinerary planning (weekend trips, week-long trips, road trips)
 - Local food and cuisine by region
@@ -36,15 +53,30 @@ const SUGGESTIONS = [
 
 const WELCOME_MESSAGE = "Namaste! 🇮🇳✈️ I'm your NextStop AI guide for Indian travel. Ask me anything about destinations across India — from the snow-capped Himalayas to the backwaters of Kerala. Where in India are you dreaming of going?";
 
+// Keywords that indicate non-travel questions — used for client-side pre-filtering
+const NON_TRAVEL_KEYWORDS = [
+  'api', 'code', 'programming', 'javascript', 'python', 'machine learning',
+  'artificial intelligence', 'how do you work', 'what are you', 'what model',
+  'sarvam', 'openai', 'chatgpt', 'llm', 'neural network', 'algorithm',
+  'database', 'server', 'backend', 'frontend', 'software', 'hardware',
+  'stock market', 'investment', 'crypto', 'bitcoin', 'medicine', 'doctor',
+  'legal advice', 'law', 'politics', 'election', 'prime minister', 'president',
+  'math', 'physics', 'chemistry', 'history lesson', 'teach me',
+];
+
+function isNonTravelQuestion(text) {
+  const lower = text.toLowerCase();
+  return NON_TRAVEL_KEYWORDS.some(keyword => lower.includes(keyword));
+}
+
+const NON_TRAVEL_REPLY = "I'm your NextStop travel guide, so I can only help with Indian destinations and travel planning! 🗺️ I'm not built to answer general questions. But I'd love to help you discover incredible India — want recommendations for a hill station, beach, or heritage destination? ✈️🇮🇳";
+
 function cleanAssistantReply(rawText) {
   if (!rawText) return '';
-
-  // sarvam-m can include internal reasoning blocks; keep only user-facing answer.
   const withoutThinkBlocks = rawText
     .replace(/<think>[\s\S]*?<\/think>/gi, '')
     .replace(/<think>[\s\S]*$/gi, '')
     .trim();
-
   return withoutThinkBlocks;
 }
 
@@ -64,8 +96,8 @@ export default function ChatBot() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        isOpen && 
-        chatWindowRef.current && 
+        isOpen &&
+        chatWindowRef.current &&
         !chatWindowRef.current.contains(event.target) &&
         chatButtonRef.current &&
         !chatButtonRef.current.contains(event.target)
@@ -73,16 +105,11 @@ export default function ChatBot() {
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   useEffect(() => {
-    // Only auto-scroll to the bottom when sending a message or while loading.
-    // This prevents the UI from auto-scrolling to the bottom of long AI responses.
     const lastMessage = messages[messages.length - 1];
     if (isLoading || (lastMessage && lastMessage.role === 'user')) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,12 +118,10 @@ export default function ChatBot() {
 
   useEffect(() => {
     if (isOpen) {
-      // Focus input and scroll to latest messages on open
       setTimeout(() => {
         inputRef.current?.focus();
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       }, 100);
-      
       setHasUnread(false);
       if (!hasShownWelcome.current) {
         hasShownWelcome.current = true;
@@ -114,69 +139,64 @@ export default function ChatBot() {
 
     const newMessages = [...messages, { role: 'user', content: userText }];
     setMessages(newMessages);
+
+    // Client-side pre-filter: catch obvious non-travel questions instantly
+    if (isNonTravelQuestion(userText)) {
+      setMessages((prev) => [...prev, { role: 'assistant', content: NON_TRAVEL_REPLY }]);
+      if (!isOpen) setHasUnread(true);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             ...newMessages
-               .filter(m => !(m.role === 'assistant' && m.content === WELCOME_MESSAGE))
-               .map((m) => ({ role: m.role, content: m.content })),
+              .filter(m => !(m.role === 'assistant' && m.content === WELCOME_MESSAGE))
+              .map((m) => ({ role: m.role, content: m.content })),
           ],
         }),
       });
-
-      console.log('Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         let errMsg = `HTTP ${response.status}`;
         try {
           const err = await response.json();
           errMsg = err.error?.message || err.message || errMsg;
-          console.error('API error response:', err);
-        } catch (e) {
-          console.error('Could not parse error response:', e);
-        }
+        } catch (e) {}
         throw new Error(errMsg);
       }
 
       const data = await response.json();
-      
       const rawReply = data.choices?.[0]?.message?.content || '';
-      console.log('Raw reply length:', rawReply.length);
-      
       const reply = cleanAssistantReply(rawReply);
-      console.log('Cleaned reply length:', reply.length);
-      
-      if (!reply) {
-        throw new Error('No reply content received after cleaning think blocks');
-      }
+
+      if (!reply) throw new Error('No reply content received after cleaning think blocks');
 
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
       if (!isOpen) setHasUnread(true);
     } catch (err) {
       console.error('ChatBot Error:', err);
-      
-      // Smart fallback responses based on keywords
+
+      // Smart fallback responses based on travel keywords
       const lowerText = userText.toLowerCase();
       let fallbackMessage = "";
 
       if (lowerText.includes("hill") || lowerText.includes("mountain") || lowerText.includes("kashmir")) {
-        fallbackMessage = "🏔️ **Hill Stations in India**\nIndia has incredible mountain escapes! I highly recommend checking out:\n- **Manali, Himachal Pradesh:** Perfect for adventure and snow.\n- **Munnar, Kerala:** Famous for lush tea gardens.\n- **Gulmarg, Kashmir:** The winter wonderland of India.\n\nYou can search 'Hill Stations' in NextStop to see more!";
+        fallbackMessage = "🏔️ **Hill Stations in India**\nIndia has incredible mountain escapes!\n- **Manali, Himachal Pradesh:** Perfect for adventure and snow.\n- **Munnar, Kerala:** Famous for lush tea gardens.\n- **Gulmarg, Kashmir:** The winter wonderland of India.\n\nSearch 'Hill Stations' in NextStop to explore more!";
       } else if (lowerText.includes("beach") || lowerText.includes("goa") || lowerText.includes("kerala") || lowerText.includes("andaman")) {
-        fallbackMessage = "🌊 **Indian Coastal Escapes**\nLooking for beaches? Here are my top picks:\n- **Goa:** Best for nightlife and vibrant culture.\n- **Gokarna, Karnataka:** For quiet, pristine beaches.\n- **Andaman Islands:** Crystal clear water and scuba diving.\n\nUse our 'Beaches' category to explore more details!";
+        fallbackMessage = "🌊 **Indian Coastal Escapes**\nTop beach picks:\n- **Goa:** Best for nightlife and vibrant culture.\n- **Gokarna, Karnataka:** Quiet, pristine beaches.\n- **Andaman Islands:** Crystal clear water and scuba diving.\n\nUse our 'Beaches' category to explore more!";
       } else if (lowerText.includes("rajasthan") || lowerText.includes("palace") || lowerText.includes("fort") || lowerText.includes("heritage")) {
-        fallbackMessage = "🏰 **Royal Rajasthan & Heritage**\nExperience the royal heritage of India!\n- **Jaipur:** The Pink City, home to Amer Fort.\n- **Udaipur:** The City of Lakes. Perfect for a romantic getaway.\n- **Jaisalmer:** Experience the epic Thar Desert.\n\nSave these spots to your NextStop itinerary!";
+        fallbackMessage = "🏰 **Royal Rajasthan & Heritage**\n- **Jaipur:** The Pink City, home to Amer Fort.\n- **Udaipur:** The City of Lakes — perfect for a romantic getaway.\n- **Jaisalmer:** Experience the epic Thar Desert.\n\nSave these to your NextStop itinerary!";
       } else if (lowerText.includes("plan") || lowerText.includes("itinerary") || lowerText.includes("trip")) {
-        fallbackMessage = "📅 **Planning a Trip?**\nI'd love to help you build a full itinerary! Since I'm currently offline, you can use the **NextStop Itinerary Planner** tab to organize your saved destinations day by day. Just search your intended cities and add them to your trip!";
+        fallbackMessage = "📅 **Planning a Trip?**\nI'd love to help you build a full itinerary! Since I'm currently offline, use the **NextStop Itinerary Planner** tab to organize your saved destinations day by day.";
       } else {
-        fallbackMessage = `Oops! 🙈 My AI brain is currently taking a little chai break (API connection issue), but I can still help you!\n\n**Welcome to NextStop!** 🇮🇳\nHere is how you can use our platform to plan your perfect Indian getaway:\n\n- 🔍 **Search:** Use the main search bar to find destinations across India.\n- 🗺️ **Explore:** Browse our curated categories like "Hill Stations" or "Beaches".\n- ❤️ **Save:** Click the heart icon on any destination to save it.\n- 📅 **Plan:** Go to your itinerary tab to organize your saved spots.`;
+        fallbackMessage = "Oops! 🙈 My travel brain is on a chai break (connection issue), but NextStop has you covered!\n\n**Explore India on NextStop** 🇮🇳\n- 🔍 **Search:** Find destinations across India\n- 🗺️ **Browse:** Hill Stations, Beaches, Heritage & more\n- ❤️ **Save:** Heart your favourite spots\n- 📅 **Plan:** Build your itinerary";
       }
 
       setMessages((prev) => [...prev, { role: 'assistant', content: fallbackMessage }]);
